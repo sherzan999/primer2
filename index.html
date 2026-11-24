@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Автосервис — запись на обслуживание (шаблон Liquid Glass)</title>
+<meta name="description" content="Запишитесь на диагностику, обслуживание или ремонт автомобиля.">
+<style>
+:root{--bg:#e9efff;--fg:#0e1530;--mut:#38435f;--acc:#1f4fd8;--acc2:#6b4cf0;--onacc:#fff;--line:rgba(14,21,48,.4);--gl:rgba(255,255,255,.34);--gl2:rgba(255,255,255,.7);--gb:rgba(255,255,255,.75);--hi:rgba(255,255,255,.95);--spec:rgba(255,255,255,.85);--sh:rgba(30,50,120,.4);--field:rgba(255,255,255,.75);--solid:#f4f7ff;--b1:#7aa7ff;--b2:#ff9ecb;--b3:#7fe3d0;--ok:#0b6b3a;--err:#b42318;--todo-bg:#fff3bf;--todo-fg:#5c4400;--todo-bd:#b58900;color-scheme:light dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root{--bg:#070b16;--fg:#f2f5ff;--mut:#bcc5de;--acc:#8ab8ff;--acc2:#b79bff;--onacc:#05101f;--line:rgba(255,255,255,.45);--gl:rgba(255,255,255,.07);--gl2:rgba(255,255,255,.2);--gb:rgba(255,255,255,.22);--hi:rgba(255,255,255,.35);--spec:rgba(255,255,255,.22);--sh:rgba(0,0,0,.7);--field:rgba(255,255,255,.1);--solid:#121a2e;--b1:#3a5bff;--b2:#8a3ffc;--b3:#00b8a9;--ok:#6ee7a8;--err:#ff9a8f;--todo-bg:#3a3000;--todo-fg:#ffe58a;--todo-bd:#c9a227}}
+*{box-sizing:border-box;margin:0}html{scroll-behavior:smooth;scroll-padding-top:96px}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--fg);line-height:1.6;font-size:17px;background:var(--bg)}
+a{color:inherit}.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+:focus-visible{outline:3px solid var(--acc);outline-offset:3px;border-radius:8px}
+.skip{position:absolute;left:-999px;top:8px;background:var(--fg);color:var(--bg);padding:10px 14px;border-radius:999px;z-index:60}.skip:focus{left:8px}
+.bg{position:fixed;inset:0;z-index:-1;overflow:hidden;background:var(--bg)}.bg i{position:absolute;width:55vmax;height:55vmax;border-radius:50%;filter:blur(80px);opacity:.7;animation:fl 24s ease-in-out infinite alternate}
+.bg i:nth-child(1){background:var(--b1);left:-15vmax;top:-12vmax}.bg i:nth-child(2){background:var(--b2);right:-18vmax;top:18vh;animation-delay:-8s}.bg i:nth-child(3){background:var(--b3);left:20vw;bottom:-25vmax;animation-delay:-15s}
+@keyframes fl{to{transform:translate(7vw,5vh) scale(1.15)}}
+.todo{background:var(--todo-bg);color:var(--todo-fg);border:1px dashed var(--todo-bd);padding:.05em .45em;border-radius:7px;font-weight:600;font-size:.95em}
+.banner{background:var(--todo-bg);color:var(--todo-fg);border-bottom:1px dashed var(--todo-bd);font-size:14px;padding:10px 20px;text-align:center}
+/* liquid glass surfaces */
+.card,.steps li,details,form,.hero .wrap,header.top .wrap,.map,.note,footer .wrap{position:relative;isolation:isolate;background:linear-gradient(135deg,var(--gl2),var(--gl) 42%,var(--gl));-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid var(--gb);box-shadow:inset 0 1px 0 var(--hi),inset 0 -1px 0 rgba(0,0,0,.08),inset 0 0 30px rgba(255,255,255,.07),0 20px 46px -22px var(--sh)}
+.card::before,.steps li::before,details::before,form::before,.hero .wrap::before,header.top .wrap::before,footer .wrap::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;background:radial-gradient(280px circle at var(--mx,18%) var(--my,0%),var(--spec),transparent 65%);opacity:.5;transition:opacity .3s}
+.card:hover::before,.steps li:hover::before,details:hover::before,form:hover::before,.hero .wrap:hover::before,footer .wrap:hover::before{opacity:1}
+.hero .wrap,header.top .wrap{-webkit-backdrop-filter:blur(16px) saturate(180%) url(#lg);backdrop-filter:blur(16px) saturate(180%) url(#lg)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.card,.steps li,details,form,.hero .wrap,header.top .wrap,.map,.note,footer .wrap{background:var(--solid)}}
+@media(prefers-reduced-transparency:reduce){.card,.steps li,details,form,.hero .wrap,header.top .wrap,.map,.note,footer .wrap{background:var(--solid);-webkit-backdrop-filter:none;backdrop-filter:none}.bg i{opacity:.4}}
+header.top{position:sticky;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:20;padding:0 12px;margin-top:10px}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:60px;border-radius:999px;padding:0 10px 0 24px}
+.brand{font-weight:700;font-size:18px;text-decoration:none}nav ul{display:flex;gap:6px;list-style:none;padding:0}nav a{text-decoration:none;color:var(--mut);font-size:15px;padding:8px 14px;border-radius:999px;transition:background .2s,color .2s}nav a:hover{color:var(--fg);background:var(--gl2)}
+@media(max-width:820px){nav{display:none}}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 28px;border-radius:999px;font:600 16px/1.2 inherit;font-family:inherit;border:1px solid var(--hi);background:linear-gradient(135deg,var(--acc),var(--acc2));color:var(--onacc);cursor:pointer;text-decoration:none;position:relative;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 10px 26px -10px var(--acc);transition:transform .25s,box-shadow .25s,filter .25s}
+.btn:hover{transform:translateY(-2px) scale(1.02);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 16px 36px -10px var(--acc);filter:saturate(1.15)}.btn:active{transform:scale(.97)}
+.btn.ghost{background:var(--gl2);color:var(--fg);border-color:var(--gb);box-shadow:inset 0 1px 0 var(--hi);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}.btn.ghost:hover{background:var(--hi);box-shadow:inset 0 1px 0 var(--hi),0 12px 28px -14px var(--sh)}
+.btn:disabled{opacity:.65;cursor:progress;transform:none}
+section{padding:64px 0}h1,h2,h3{line-height:1.15;letter-spacing:-.02em}h1{font-size:clamp(34px,6vw,60px)}h2{font-size:clamp(28px,4vw,40px);margin-bottom:12px}.lead{color:var(--mut);max-width:640px;font-size:19px}
+.hero{padding:40px 0 40px}.hero .wrap{max-width:980px;padding:clamp(28px,6vw,64px);border-radius:40px}.hero p{color:var(--mut);font-size:clamp(18px,2.2vw,21px);max-width:620px;margin:18px 0 30px}.cta{display:flex;gap:12px;flex-wrap:wrap}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:36px}
+.card{border-radius:28px;padding:26px;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}.card:hover{transform:translateY(-6px);box-shadow:inset 0 1px 0 var(--hi),0 26px 50px -20px var(--sh)}
+.card h3{font-size:20px;margin-bottom:8px}.card p{color:var(--mut);font-size:16px}.card .todo{display:inline-block;margin-top:12px;font-size:14px}
+ol.steps{list-style:none;padding:0;margin-top:36px;display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));counter-reset:s}
+.steps li{counter-increment:s;border-radius:26px;padding:22px}.steps li::after{content:"Шаг " counter(s);order:-1;font-size:13px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.06em;position:absolute;top:22px;left:22px}.steps li{padding-top:46px}.steps h3{font-size:19px;margin:0 0 6px}.steps p{color:var(--mut);font-size:15px}
+form{margin-top:32px;display:grid;gap:18px;grid-template-columns:1fr 1fr;max-width:860px;padding:clamp(20px,4vw,36px);border-radius:34px}.full{grid-column:1/-1}@media(max-width:640px){form{grid-template-columns:1fr}}
+label,legend{display:block;font-weight:600;font-size:15px;margin-bottom:6px}.req{color:var(--err)}
+input,select,textarea{width:100%;min-height:50px;padding:11px 16px;font:inherit;color:var(--fg);background:var(--field);border:2px solid var(--line);border-radius:16px;transition:border-color .2s,box-shadow .2s}
+input:hover,select:hover{border-color:var(--fg)}input:focus,select:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 35%,transparent)}select option{color:#111;background:#fff}
+[aria-invalid=true]{border-color:var(--err)}.err{color:var(--err);font-size:14px;margin-top:6px;font-weight:700}.hint{color:var(--mut);font-size:14px;margin-top:6px}
+.check{display:flex;gap:12px;align-items:flex-start}.check input{width:24px;height:24px;min-height:0;margin-top:2px;accent-color:var(--acc);flex:none}.check label{font-weight:400;margin:0}
+#status{padding:14px 18px;border-radius:18px;border:2px solid var(--line);font-weight:700;background:var(--field)}#status:empty{display:none}#status.ok{border-color:var(--ok);color:var(--ok)}#status.bad{border-color:var(--err);color:var(--err)}
+.note{max-width:860px;margin-top:18px;border:1px dashed var(--todo-bd);background:var(--todo-bg);color:var(--todo-fg);border-radius:20px;padding:14px 18px;font-size:15px;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+.contacts{display:grid;gap:24px;grid-template-columns:1fr 1fr;margin-top:32px}@media(max-width:760px){.contacts{grid-template-columns:1fr}}
+dl{display:grid;grid-template-columns:110px 1fr;gap:14px 16px;align-content:start}dt{color:var(--mut)}dd{margin:0;font-weight:500}
+.map{min-height:280px;border-radius:30px;border-style:dashed;border-color:var(--line);display:grid;place-items:center;text-align:center;padding:24px;color:var(--mut)}
+details{border-radius:22px;padding:2px 22px;margin-bottom:12px}summary{cursor:pointer;font-weight:600;padding:16px 36px 16px 0;list-style:none;position:relative;font-size:18px}summary::-webkit-details-marker{display:none}
+summary::after{content:"+";position:absolute;right:2px;top:10px;font-size:28px;color:var(--acc);transition:transform .25s}details[open] summary::after{transform:rotate(45deg)}summary:hover{color:var(--acc)}details p{padding:0 0 18px;color:var(--mut);max-width:720px}
+footer{padding:24px 0 36px;font-size:15px}footer .wrap{max-width:1040px;padding:36px clamp(20px,4vw,40px);border-radius:36px}footer .cols{display:grid;gap:28px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}footer h2{font-size:17px;margin-bottom:10px}footer ul{list-style:none;padding:0;display:grid;gap:8px}footer a{text-decoration:underline;text-underline-offset:3px}.legal{margin-top:26px;padding-top:18px;border-top:1px solid var(--gb);font-size:13px;color:var(--mut)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"><i></i><i></i><i></i></div>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><filter id="lg" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".008 .012" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="14"/></filter></svg>
+<a class="skip" href="#main">Перейти к содержимому</a>
+
+<header class="top"><div class="wrap">
+  <a class="brand" href="#top"><span class="todo">[Название автосервиса]</span></a>
+  <nav aria-label="Основная навигация"><ul><li><a href="#services">Услуги</a></li><li><a href="#why">Преимущества</a></li><li><a href="#steps">Этапы</a></li><li><a href="#faq">Вопросы</a></li><li><a href="#contacts">Контакты</a></li></ul></nav>
+  <a class="btn" href="#booking">Записаться</a>
+</div></header>
+
+<main id="main">
+<section class="hero" id="top"><div class="wrap">
+  <h1>Запишитесь на обслуживание автомобиля в <span class="todo">[город]</span></h1>
+  <p>Оставьте заявку: укажите, что беспокоит в машине, и удобное время. Мы свяжемся с вами и подтвердим запись. <span class="todo">[Ваше главное преимущество — одна честная фраза]</span></p>
+  <div class="cta"><a class="btn" href="#booking">Записаться</a><a class="btn ghost" href="#services">Смотреть услуги</a></div>
+</div></section>
+
+<section id="services"><div class="wrap">
+  <h2>Услуги</h2><p class="lead">Примерный перечень. Оставьте только те услуги, которые вы действительно оказываете, и добавьте стоимость.</p>
+  <div class="grid">
+    <article class="card"><h3>Диагностика</h3><p>Осмотр автомобиля и проверка систем, чтобы определить причину неисправности.</p><span class="todo">Стоимость: [указать]</span></article>
+    <article class="card"><h3>Техническое обслуживание</h3><p>Замена масла, фильтров и расходников, проверка узлов по регламенту автомобиля.</p><span class="todo">Стоимость: [указать]</span></article>
+    <article class="card"><h3>Ходовая часть</h3><p>Проверка и ремонт подвески, рулевого управления, ступиц.</p><span class="todo">Стоимость: [указать]</span></article>
+    <article class="card"><h3>Тормозная система</h3><p>Проверка и замена колодок, дисков, тормозной жидкости.</p><span class="todo">Стоимость: [указать]</span></article>
+    <article class="card"><h3>Двигатель и трансмиссия</h3><p>Диагностика и ремонт двигателя, сцепления, коробки передач.</p><span class="todo">Стоимость: [указать]</span></article>
+    <article class="card"><h3>Электрика</h3><p>Поиск и устранение неисправностей проводки, стартера, генератора, освещения.</p><span class="todo">Стоимость: [указать]</span></article>
+  </div>
+</div></section>
+
+<section class="alt" id="why"><div class="wrap">
+  <h2>Почему стоит обратиться к нам</h2><p class="lead">Четыре вопроса, которые волнуют клиента. Ответьте на них конкретными фактами, без цифр «для красоты».</p>
+  <div class="grid">
+    <article class="card"><h3>Опыт</h3><p>Расскажите, с какими автомобилями и задачами вы работаете чаще всего.</p><span class="todo">[Стаж, специализация, марки]</span></article>
+    <article class="card"><h3>Гарантия</h3><p>Опишите, на что даётся гарантия и как её оформить.</p><span class="todo">[Условия гарантии]</span></article>
+    <article class="card"><h3>Оборудование</h3><p>Назовите оборудование и инструмент, которыми действительно пользуетесь.</p><span class="todo">[Список оборудования]</span></article>
+    <article class="card"><h3>Прозрачная стоимость</h3><p>Объясните, как рассчитывается цена и когда клиент узнаёт итоговую сумму.</p><span class="todo">[Как формируется цена]</span></article>
+  </div>
+</div></section>
+
+<section id="steps"><div class="wrap">
+  <h2>Как проходит работа</h2><p class="lead">Типовая схема. Поправьте её под ваш реальный порядок.</p>
+  <ol class="steps">
+    <li><h3>Заявка</h3><p>Вы оставляете заявку на сайте или звоните.</p></li>
+    <li><h3>Осмотр и диагностика</h3><p>Определяем причину и объём работ.</p></li>
+    <li><h3>Согласование</h3><p>Обсуждаем перечень работ и стоимость до начала ремонта.</p></li>
+    <li><h3>Ремонт</h3><p>Выполняем согласованные работы.</p></li>
+    <li><h3>Выдача автомобиля</h3><p>Показываем результат и рассказываем, что было сделано.</p></li>
+  </ol>
+</div></section>
+
+<section class="alt" id="booking"><div class="wrap">
+  <h2>Запись на обслуживание</h2><p class="lead">Поля со звёздочкой <span class="req" aria-hidden="true">*</span> обязательны.</p>
+  <form id="f" novalidate>
+    <div><label for="name">Имя <span class="req" aria-hidden="true">*</span></label><input id="name" name="name" autocomplete="name" required aria-describedby="e-name"><p class="err" id="e-name" hidden></p></div>
+    <div><label for="phone">Телефон <span class="req" aria-hidden="true">*</span></label><input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+___ __ ___-__-__" required aria-describedby="e-phone"><p class="err" id="e-phone" hidden></p></div>
+    <div><label for="car">Марка автомобиля <span class="req" aria-hidden="true">*</span></label><input id="car" name="car" autocomplete="off" placeholder="Например, марка и модель" required aria-describedby="e-car"><p class="err" id="e-car" hidden></p></div>
+    <div><label for="service">Нужная услуга <span class="req" aria-hidden="true">*</span></label>
+      <select id="service" name="service" required aria-describedby="e-service"><option value="">Выберите услугу</option><option>Диагностика</option><option>Техническое обслуживание</option><option>Ходовая часть</option><option>Тормозная система</option><option>Двигатель и трансмиссия</option><option>Электрика</option><option>Другое / не знаю, что нужно</option></select><p class="err" id="e-service" hidden></p></div>
+    <div><label for="date">Желаемая дата</label><input id="date" name="date" type="date" aria-describedby="h-date"><p class="hint" id="h-date">Прошлые даты выбрать нельзя. Окончательное время подтвердим по телефону.</p></div>
+    <div><label for="time">Удобное время <span class="req" aria-hidden="true">*</span></label>
+      <select id="time" name="time" required aria-describedby="e-time"><option value="">Выберите вариант</option><option>Утром</option><option>Днём</option><option>Вечером</option><option>Любое, согласуем по телефону</option></select><p class="err" id="e-time" hidden></p></div>
+    <div class="full check"><input id="consent" name="consent" type="checkbox" required aria-describedby="e-consent"><label for="consent">Согласен на обработку персональных данных для связи по заявке. <span class="todo">[ссылка на политику конфиденциальности]</span></label></div>
+    <p class="err full" id="e-consent" hidden></p>
+    <div class="full"><button class="btn" type="submit" id="send">Записаться</button></div>
+    <div class="full" id="status" role="status" aria-live="polite"></div>
+  </form>
+  <p class="note"><strong>Отправка формы не подключена.</strong> Сейчас форма только проверяет поля и показывает сообщение. Чтобы заявки приходили, укажите адрес обработчика в константе <code>FORM_ENDPOINT</code> в конце файла (скрипт внизу страницы): это может быть Formspree, Google Apps Script, Telegram-бот или ваш сервер.</p>
+</div></section>
+
+<section id="contacts"><div class="wrap">
+  <h2>Контакты</h2>
+  <div class="contacts">
+    <dl>
+      <dt>Адрес</dt><dd><span class="todo">[город, улица, дом]</span></dd>
+      <dt>График</dt><dd><span class="todo">[дни и часы работы]</span></dd>
+      <dt>Телефон</dt><dd><span class="todo">[номер телефона]</span></dd>
+      <dt>Почта</dt><dd><span class="todo">[e-mail]</span></dd>
+      <dt>Как добраться</dt><dd><span class="todo">[ориентиры, парковка]</span></dd>
+    </dl>
+    <div class="map" role="img" aria-label="Заглушка карты"><div><strong>Карта-заглушка</strong><br>Вставьте сюда код карты (iframe Яндекс Карт или Google Maps) с вашим адресом.</div></div>
+  </div>
+</div></section>
+
+<section class="alt" id="faq"><div class="wrap">
+  <h2>Частые вопросы</h2>
+  <div style="margin-top:28px;max-width:820px">
+    <details><summary>Сколько стоит диагностика?</summary><p><span class="todo">[Укажите стоимость или условия: бесплатно, зачитывается в ремонт и т. д.]</span></p></details>
+    <details><summary>Сколько времени занимает ремонт?</summary><p>Срок зависит от автомобиля и объёма работ. Ориентировочное время назовём после осмотра. <span class="todo">[Добавьте типовые сроки, если они у вас есть]</span></p></details>
+    <details><summary>Даёте ли вы гарантию на работы?</summary><p><span class="todo">[Опишите условия гарантии на работы и запчасти]</span></p></details>
+    <details><summary>Можно ли привезти свои запчасти?</summary><p><span class="todo">[Опишите вашу политику по запчастям клиента]</span></p></details>
+    <details><summary>Как оплатить работы?</summary><p><span class="todo">[Способы оплаты: наличные, карта, безналичный расчёт]</span></p></details>
+    <details><summary>Как узнать итоговую стоимость?</summary><p>После осмотра согласуем перечень работ и стоимость до начала ремонта. <span class="todo">[Подтвердите, что это соответствует вашей практике]</span></p></details>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <div class="cols">
+    <div><h2><span class="todo">[Название автосервиса]</span></h2><p>Запись на обслуживание автомобиля.</p></div>
+    <div><h2>Контакты</h2><ul><li><span class="todo">[телефон]</span></li><li><span class="todo">[e-mail]</span></li><li><span class="todo">[адрес]</span></li></ul></div>
+    <div><h2>Мы в соцсетях</h2><ul><li><a href="#" data-todo>Telegram — ссылка не задана</a></li><li><a href="#" data-todo>Instagram — ссылка не задана</a></li><li><a href="#" data-todo>VK — ссылка не задана</a></li></ul></div>
+  </div>
+  <p class="legal"><span class="todo">[Юридическое лицо / ИП, регистрационный номер]</span> · <a href="#" data-todo>Политика конфиденциальности</a></p>
+</div></footer>
+
+<script>
+// ПОДКЛЮЧЕНИЕ ОТПРАВКИ ФОРМЫ: впишите адрес обработчика (например, https://formspree.io/f/xxxx).
+// Пока значение пустое, заявка НЕ отправляется, показывается только сообщение-заглушка.
+const FORM_ENDPOINT = "";
+
+const f = document.getElementById("f"), st = document.getElementById("status"), btn = document.getElementById("send");
+const dt = document.getElementById("date");
+const now = new Date(); dt.min = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+document.querySelectorAll(".card,.steps li,details,form,.hero .wrap,footer .wrap").forEach(el => el.addEventListener("pointermove", e => { const r = el.getBoundingClientRect(); el.style.setProperty("--mx", (e.clientX - r.left) + "px"); el.style.setProperty("--my", (e.clientY - r.top) + "px"); }));
+document.querySelectorAll("a[data-todo]").forEach(a => a.addEventListener("click", e => e.preventDefault()));
+
+const rules = {
+  name: v => v.trim().length >= 2 || "Введите имя (минимум 2 символа).",
+  phone: v => /^[+\d][\d\s()\-]{6,}$/.test(v.trim()) || "Введите телефон: цифры, пробелы, скобки и дефис.",
+  car: v => v.trim().length >= 2 || "Укажите марку автомобиля.",
+  service: v => v !== "" || "Выберите услугу.",
+  time: v => v !== "" || "Выберите удобное время."
+};
+function setErr(id, msg) {
+  const el = document.getElementById(id === "consent" ? "e-consent" : "e-" + id), inp = document.getElementById(id);
+  if (msg) { el.textContent = "Ошибка: " + msg; el.hidden = false; inp.setAttribute("aria-invalid", "true"); }
+  else { el.hidden = true; inp.removeAttribute("aria-invalid"); }
+  return !msg;
+}
+function validate() {
+  let first = null;
+  for (const k in rules) { const r = rules[k](f[k].value); if (!setErr(k, r === true ? "" : r) && !first) first = f[k]; }
+  if (!setErr("consent", f.consent.checked ? "" : "Нужно согласие на обработку данных.") && !first) first = f.consent;
+  if (dt.value && dt.value < dt.min) { dt.value = dt.min; }
+  return first;
+}
+f.addEventListener("submit", async e => {
+  e.preventDefault(); st.className = ""; st.textContent = "";
+  const bad = validate();
+  if (bad) { st.className = "bad"; st.textContent = "Проверьте выделенные поля."; bad.focus(); return; }
+  if (!FORM_ENDPOINT) { st.className = "bad"; st.textContent = "Демо: заявка не отправлена, потому что обработчик формы не подключён (см. FORM_ENDPOINT в скрипте)."; return; }
+  btn.disabled = true; btn.textContent = "Отправляем…";
+  try {
+    const res = await fetch(FORM_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" }, body: JSON.stringify(Object.fromEntries(new FormData(f))) });
+    if (!res.ok) throw new Error(res.status);
+    st.className = "ok"; st.textContent = "Спасибо! Заявка отправлена, мы свяжемся с вами."; f.reset();
+  } catch (err) { st.className = "bad"; st.textContent = "Не удалось отправить заявку. Попробуйте ещё раз или позвоните нам."; }
+  btn.disabled = false; btn.textContent = "Записаться";
+});
+f.addEventListener("input", e => { if (e.target.id && e.target.getAttribute("aria-invalid")) { const r = rules[e.target.id]; if (!r || r(e.target.value) === true) setErr(e.target.id, ""); } });
+</script>
+</body>
+</html>
